@@ -1,0 +1,229 @@
+.text
+.globl tigermain
+.type tigermain, @function
+
+tigermain:
+    pushl %ebp
+    movl %esp, %ebp
+    subl $4, %esp
+    movl %edi, -4(%ebp)
+    pushl %ebp
+    call try
+    movl %eax, %edi
+    movl -4(%ebp), %ebx
+    movl %ebx, %edi
+    jmp L18
+L18:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+try:
+    pushl %ebp
+    movl %esp, %ebp
+    subl $4, %esp
+    movl %edi, -4(%ebp)    #swap t113 out with t200
+    movl $56, %edi
+    pushl %edi
+    movl 8(%ebp), %edi
+    pushl %edi
+    call check
+    movl %eax, %edi
+    pushl %edi
+    call printi
+    movl $L2, %edi
+    pushl %edi
+    call print
+    movl $23, %edi
+    pushl %edi
+    movl 8(%ebp), %edi
+    pushl %edi
+    call check
+    movl %eax, %edi
+    pushl %edi
+    call printi
+    movl $L3, %edi
+    pushl %edi
+    call print
+    movl $71, %edi
+    pushl %edi
+    movl 8(%ebp), %edi
+    pushl %edi
+    call check
+    movl %eax, %edi
+    pushl %edi
+    call printi
+    movl $L4, %edi
+    pushl %edi
+    call print
+    movl $72, %edi
+    pushl %edi
+    movl 8(%ebp), %edi
+    pushl %edi
+    call check
+    movl %eax, %edi
+    pushl %edi
+    call printi
+    movl $L5, %edi
+    pushl %edi
+    call print
+    movl $173, %edi
+    pushl %edi
+    movl 8(%ebp), %edi
+    pushl %edi
+    call check
+    movl %eax, %edi
+    pushl %edi
+    call printi
+    movl $L6, %edi
+    pushl %edi
+    call print
+    movl $181, %edi
+    pushl %edi
+    movl 8(%ebp), %edi
+    pushl %edi
+    call check
+    movl %eax, %edi
+    pushl %edi
+    call printi
+    movl $L7, %edi
+    pushl %edi
+    call print
+    movl $281, %edi
+    pushl %edi
+    movl 8(%ebp), %edi
+    pushl %edi
+    call check
+    movl %eax, %edi
+    pushl %edi
+    call printi
+    movl $L8, %edi
+    pushl %edi
+    call print
+    movl $659, %edi
+    pushl %edi
+    movl 8(%ebp), %edi
+    pushl %edi
+    call check
+    movl %eax, %edi
+    pushl %edi
+    call printi
+    movl $L9, %edi
+    pushl %edi
+    call print
+    movl $729, %edi
+    pushl %edi
+    movl 8(%ebp), %edi
+    pushl %edi
+    call check
+    movl %eax, %edi
+    pushl %edi
+    call printi
+    movl $L10, %edi
+    pushl %edi
+    call print
+    movl $947, %edi
+    pushl %edi
+    movl 8(%ebp), %edi
+    pushl %edi
+    call check
+    movl %eax, %edi
+    pushl %edi
+    call printi
+    movl $L11, %edi
+    pushl %edi
+    call print
+    movl $945, %edi
+    pushl %edi
+    movl 8(%ebp), %edi
+    pushl %edi
+    call check
+    movl %eax, %edi
+    pushl %edi
+    call printi
+    movl $L12, %edi
+    pushl %edi
+    call print
+    movl %eax, %edi
+    movl -4(%ebp), %ebx    #swap t113 in with t201
+    movl %ebx, %edi
+    jmp L19
+L19:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+check:
+    pushl %ebp
+    movl %esp, %ebp
+    subl $12, %esp
+    movl %ebx, %eax
+    movl %eax, -4(%ebp)
+    movl %esi, %eax
+    movl %eax, -8(%ebp)
+    movl %edi, %eax
+    movl %eax, -12(%ebp)
+    movl $1, %edi
+    movl $2, %esi
+    movl 12(%ebp), %ecx
+    movl $2, %ebx
+    movl %ecx, %eax
+    cltd
+    idivl %ebx
+    movl %eax, %ecx
+L25:
+    cmp %ecx, %esi
+    jle L26
+L1:
+    movl %edi, %eax
+    movl -8(%ebp), %ebx
+    movl %ebx, %esi
+    movl -12(%ebp), %ebx
+    movl %ebx, %edi
+    jmp L20
+L26:
+    movl 12(%ebp), %ebx
+    movl %ebx, %eax
+    cltd
+    idivl %esi
+    movl %eax, %ebx
+    imull %esi, %ebx
+    movl 12(%ebp), %eax
+    cmp %eax, %ebx
+    je L22
+L23:
+    movl %esi, %eax
+    addl $1, %eax
+    movl %eax, %esi
+    jmp L25
+L22:
+    movl $0, %edi
+    jmp L1
+L20:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+.section .rodata
+L12:
+.string "\00\00\00\n"
+L11:
+.string "\00\00\00\n"
+L10:
+.string "\00\00\00\n"
+L9:
+.string "\00\00\00\n"
+L8:
+.string "\00\00\00\n"
+L7:
+.string "\00\00\00\n"
+L6:
+.string "\00\00\00\n"
+L5:
+.string "\00\00\00\n"
+L4:
+.string "\00\00\00\n"
+L3:
+.string "\00\00\00\n"
+L2:
+.string "\00\00\00\n"

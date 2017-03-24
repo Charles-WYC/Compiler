@@ -1,0 +1,51 @@
+.text
+.globl tigermain
+.type tigermain, @function
+
+tigermain:
+    pushl %ebp
+    movl %esp, %ebp
+    subl $4, %esp
+    movl $10, %eax
+    pushl %eax
+    pushl %ebp
+    call nfactor
+    pushl %eax
+    call printi
+    jmp L3
+L3:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+a:
+    pushl %ebp
+    movl %esp, %ebp
+L3:
+    movl $3, %eax    #118
+    pushl %eax    #231
+    pushl %ebp    #231
+    call b    #125
+    jmp L2    #192
+L2:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+b:
+    pushl %ebp
+    movl %esp, %ebp
+L5:
+    movl 8(%ebp), %eax    #102
+    movl 8(%eax), %ebx    #102
+    movl 12(%ebx), %ecx    #102
+    movl 8(%ebp), %eax    #102
+    movl 12(%eax), %eax    #102
+    addl %ecx, %eax    #63
+    jmp L4    #192
+L4:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+.section .rodata

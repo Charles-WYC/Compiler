@@ -1,0 +1,182 @@
+/* This file is not complete.  You should fill it in with your
+   solution to the programming exercise. */
+#include <stdio.h>
+#include "prog1.h"
+#include "slp.h"
+
+int maxargs(A_stm stm);
+void interp(A_stm stm);
+
+typedef struct table *Table_;
+struct table {string id; int value; Table_ tail;};
+Table_ Table(string id, int value, struct table *tail){
+	Table_ t = malloc(sizeof(*t));
+	t->id = id;
+	t->value = value;
+	t->tail = tail;
+	return t;
+}
+
+struct IntAndTable {int i; Table_ t;};
+
+int maxargsExp(A_exp exp){
+	if(exp->kind == A_opExp){
+		int leftMax = maxargsExp(exp->u.op.left);
+		int rightMax = maxargsExp(exp->u.op.right);
+		if(leftMax > rightMax){
+			return leftMax;
+		}
+		else{
+			return rightMax;
+		}
+	}
+	else if(exp->kind == A_eseqExp){
+		int stmMax = maxargs(exp->u.eseq.stm);
+		int expMax = maxargsExp(exp->u.eseq.exp);
+		if(stmMax > expMax){
+			return stmMax;
+		}
+		else{
+			return expMax;
+		}
+	}
+	else{
+		return 0;
+	}
+}
+
+int getSize(A_expList exps){
+	int size = 1;
+	while(exps->kind != A_lastExpList){
+		size++;
+		exps = exps->u.pair.tail;
+	}
+	return size;
+}
+
+int maxargs(A_stm stm){
+	if(stm->kind == A_compoundStm){
+		int stm1Max = maxargs(exp->u.compound.stm1);
+		int stm2Max = maxargs(exp->u.compound.stm2);
+		if(stm1Max > stm2Max){
+			return stm1Max;
+		}
+		else{
+			return stm2Max;
+		}
+	}
+	else if(stm->kind == A_assignStm){
+		return maxargsExp(stm->u.assign.exp);
+	}
+	else{
+		return getSize(stm->u.print.exps);
+	}
+}
+int lookup(Table_ t, string key){
+	if(t == NULL){
+		return NULL;
+	}
+	else{
+		if(t->id == key){
+			return t->value;
+		}
+		else{
+			return lookup(t->tail, key);
+		}
+	}
+}
+
+struct IntAndTable interpExp(A_exp e, Table_ t){
+	if(exp->kind == A_opExp){
+		IntAndTable intAndTable = interpExp(exp->u.op.left, t);
+		int left = intAndTable.i;
+		intAndTable = interpExp(exp->u.op.right, intAndTable.t);
+		int right = intAndTable.i;
+		int ans = 0;
+		if(exp->u.op.oper == A_plus){
+			ans = left + right;
+		}
+		else if(exp->u.op.oper == A_minus){
+			ans = left - right;
+		}
+		else if(exp->u.op.oper == A_times){
+			ans = left * right;
+		}
+		else{
+			ans = left / right;
+		}
+		intAndTable.i = ans;
+		return intAndTable;
+	}
+	else if(exp->kind == A_eseqExp){
+		t = interpStm(exp->u.eseq.stm, t);
+		IntAndTable intAndTable = interpExp(exp->u.eseq.exp, t);
+		return intAndTable;
+	}
+	else if(exp->kind == A_IdExp){
+		int id = lookup(t, exp->u.id);
+		struct IntAndTable intAndTable = {id, t};
+		return intAndTable;
+	}
+	else{
+		struct IntAndTable intAndTable = {exp->u.num, t};
+		return intAndTable;
+	}
+}
+
+Table_ interpStm(A_stm s, Table_ t){
+	if(stm->kind == A_compoundStm){
+		t = interpStm(exp->u.compound.stm1, t);
+		t = interpStm(exp->u.compound.stm2, t);
+		return t;
+	}
+	else if(stm->kind == A_assignStm){
+		IntAndTable intAndTable = interpExp(stm->u.assign.exp, t);
+		t = Table(stm->u.assign.id, intAndTable.i, intAndTable.t);
+		return t;
+	}
+	else{
+		A_expList exps = stm->u.print.exps;
+		while(exps->kind != A_lastExpList){
+			IntAndTable intAndTable = interpExp(exps->u.pair.head, t);
+			printf("%d ", intAndTable.i);
+			t = intAndTable.t;
+			exps = exps->u.pair.tail;
+		}
+		
+		IntAndTable intAndTable = interpExp(exps->u.pair.head, t);
+		printf("%d\n", intAndTable.i);
+		t = intAndTable.t;
+		return t;
+	}
+}
+
+
+void interp(A_stm stm){
+	Table_ t = NULL;
+	t = interpStm(stm, t);
+}
+/*
+ *Please don't modify the main() function
+ */
+int main()
+{
+	int args;
+
+	printf("prog\n");
+	args = maxargs(prog());
+	printf("args: %d\n",args);
+	interp(prog());
+
+	printf("prog_prog\n");
+	args = maxargs(prog_prog());
+	printf("args: %d\n",args);
+	interp(prog_prog());
+
+	printf("right_prog\n");
+	args = maxargs(right_prog());
+	printf("args: %d\n",args);
+	interp(right_prog());
+
+	return 0;
+}

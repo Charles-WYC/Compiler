@@ -1,0 +1,347 @@
+.text
+.globl tigermain
+.type tigermain, @function
+
+tigermain:
+    pushl %ebp
+    movl %esp, %ebp
+    subl $16, %esp
+    movl %ebx, -12(%ebp)
+    movl %edi, %ebx
+    movl %ebx, -16(%ebp)
+    movl $16, %ebx
+    movl %ebx, -4(%ebp)
+    movl %ebp, %ebx
+    addl $-8, %ebx
+    movl %ebx, %edi
+    movl $0, %ebx
+    pushl %ebx
+    movl -4(%ebp), %ebx
+    pushl %ebx
+    call initArray
+    movl %eax, %ebx
+    movl %ebx, (%edi)
+    pushl %ebp
+    call dosort
+    movl %eax, %ebx
+    movl -12(%ebp), %ebx
+    movl -16(%ebp), %ebx
+    movl %ebx, %edi
+    jmp L32
+L32:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+dosort:
+    pushl %ebp
+    movl %esp, %ebp
+    subl $16, %esp
+    movl %ebx, -4(%ebp)
+    movl %esi, %ebx
+    movl %ebx, -8(%ebp)
+    movl %edi, %ebx
+    movl %ebx, -12(%ebp)
+    movl 8(%ebp), %ebx
+    pushl %ebx
+    call init
+    movl 8(%ebp), %ebx
+    movl -4(%ebx), %ebx
+    subl $1, %ebx
+    pushl %ebx
+    movl $0, %ebx
+    pushl %ebx
+    movl 8(%ebp), %ebx
+    pushl %ebx
+    call quicksort
+    movl $0, %ebx
+    movl 8(%ebp), %edi
+    movl -4(%edi), %edi
+    movl %edi, %edi
+    subl $1, %edi
+    movl %edi, %edi
+    movl %edi, -16(%ebp)
+L29:
+    movl -16(%ebp), %edi
+    cmp %edi, %ebx
+    jle L30
+L27:
+    movl $L25, %ebx
+    pushl %ebx
+    call print
+    movl %eax, %ebx
+    movl -4(%ebp), %ebx
+    movl %ebx, %ebx
+    movl -8(%ebp), %ebx
+    movl %ebx, %esi
+    movl -12(%ebp), %ebx
+    movl %ebx, %edi
+    movl %eax, %eax
+    jmp L33
+L30:
+    movl 8(%ebp), %edi
+    movl -8(%edi), %edi
+    movl %ebx, %esi
+    imull $4, %esi
+    addl %esi, %edi
+    movl (%edi), %edi
+    pushl %edi
+    call printi
+    movl $L24, %edi
+    pushl %edi
+    call print
+    addl $1, %ebx
+    jmp L29
+L33:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+quicksort:
+    pushl %ebp
+    movl %esp, %ebp
+    subl $24, %esp
+    movl %ebx, -4(%ebp)    #swap t120 out with t224
+    movl %esi, %ebx
+    movl %ebx, -8(%ebp)    #swap t121 out with t225
+    movl %edi, %ebx
+    movl %ebx, -12(%ebp)    #swap t122 out with t226
+    movl 12(%ebp), %ebx
+    movl %ebx, -16(%ebp)    #swap t113 out with t227
+    movl 16(%ebp), %ebx
+    movl %ebx, -20(%ebp)    #swap t114 out with t228
+    movl 8(%ebp), %ebx
+    movl -8(%ebx), %edi
+    movl 12(%ebp), %ebx
+    imull $4, %ebx
+    addl %ebx, %edi
+    movl (%edi), %ebx
+    movl %ebx, -24(%ebp)    #swap t115 out with t229
+    movl 12(%ebp), %edi
+    movl 16(%ebp), %ebx
+    cmp %ebx, %edi
+    jl L28
+L31:
+    movl $0, %eax
+    movl -8(%ebp), %ebx    #swap t121 in with t231
+    movl %ebx, %esi
+    movl -12(%ebp), %ebx    #swap t122 in with t232
+    movl %ebx, %edi
+    jmp L34
+L28:
+L22:
+    movl -16(%ebp), %edi    #swap t113 in with t233
+    movl -20(%ebp), %ebx    #swap t114 in with t234
+    cmp %ebx, %edi
+    jl L23
+L5:
+    movl 8(%ebp), %ebx
+    movl -8(%ebx), %edi
+    movl -16(%ebp), %ebx    #swap t113 in with t235
+    imull $4, %ebx
+    addl %ebx, %edi
+    movl -24(%ebp), %ebx    #swap t115 in with t236
+    movl %ebx, (%edi)
+    movl -16(%ebp), %ebx    #swap t113 in with t237
+    subl $1, %ebx
+    pushl %ebx
+    movl 12(%ebp), %ebx
+    pushl %ebx
+    movl 8(%ebp), %ebx
+    pushl %ebx
+    call quicksort
+    movl 16(%ebp), %ebx
+    pushl %ebx
+    movl -16(%ebp), %ebx    #swap t113 in with t238
+    addl $1, %ebx
+    pushl %ebx
+    movl 8(%ebp), %ebx
+    pushl %ebx
+    call quicksort
+    jmp L31
+L23:
+L12:
+    movl -16(%ebp), %edi    #swap t113 in with t239
+    movl -20(%ebp), %ebx    #swap t114 in with t240
+    movl $0, %ebx
+    jl L6
+L7:
+    movl $0, %edi
+L8:
+    movl $0, %ebx
+    cmp %ebx, %edi
+    jne L13
+L11:
+    movl 8(%ebp), %ebx
+    movl -8(%ebx), %edi
+    movl -16(%ebp), %ebx    #swap t113 in with t241
+    movl %ebx, %ebx
+    imull $4, %ebx
+    addl %ebx, %edi
+    movl 8(%ebp), %ebx
+    movl -8(%ebx), %esi
+    movl -20(%ebp), %ebx    #swap t114 in with t242
+    imull $4, %ebx
+    addl %ebx, %esi
+    movl (%esi), %ebx
+    movl %ebx, (%edi)
+L20:
+    movl -16(%ebp), %edi    #swap t113 in with t243
+    movl -20(%ebp), %ebx    #swap t114 in with t244
+    cmp %ebx, %edi
+    jl L14
+L15:
+    movl $0, %edi
+L16:
+    movl $0, %ebx
+    cmp %ebx, %edi
+    jne L21
+L19:
+    movl 8(%ebp), %ebx
+    movl -8(%ebx), %edi
+    movl -20(%ebp), %ebx    #swap t114 in with t245
+    movl %ebx, %ebx
+    imull $4, %ebx
+    movl %edi, %edi
+    addl %ebx, %edi
+    movl 8(%ebp), %ebx
+    movl -8(%ebx), %esi
+    movl -16(%ebp), %ebx    #swap t113 in with t246
+    movl %ebx, %ebx
+    imull $4, %ebx
+    addl %ebx, %esi
+    movl (%esi), %ebx
+    movl %ebx, (%edi)
+    jmp L22
+L6:
+L6:
+    movl $1, %esi
+    movl 8(%ebp), %ebx
+    movl -8(%ebx), %edi
+    movl -20(%ebp), %ebx
+    movl %ebx, %ebx
+    imull $4, %ebx
+    addl %ebx, %edi
+    movl (%edi), %edi
+    movl -24(%ebp), %ebx
+    cmp %edi, %ebx
+    jle L9
+L10:
+    movl $0, %esi
+L9:
+    movl %esi, %edi
+    jmp L8
+L13:
+    movl -20(%ebp), %ebx
+    movl %ebx, %ebx
+    subl $1, %ebx
+    movl %ebx, %ebx
+    movl %ebx, -20(%ebp)
+    jmp L12
+L14:
+    movl $1, %esi
+    movl 8(%ebp), %ebx
+    movl -8(%ebx), %edi
+    movl -16(%ebp), %ebx
+    movl %ebx, %ebx
+    imull $4, %ebx
+    addl %ebx, %edi
+    movl (%edi), %edi
+    movl -24(%ebp), %ebx
+    cmp %edi, %ebx
+    jge L17
+L18:
+    movl $0, %esi
+L17:
+    movl %esi, %edi
+    jmp L16
+L21:
+    movl -16(%ebp), %ebx
+    movl %ebx, %ebx
+    addl $1, %ebx
+    movl %ebx, %ebx
+    movl %ebx, -16(%ebp)
+    jmp L20
+L34:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+init:
+    pushl %ebp
+    movl %esp, %ebp
+    subl $16, %esp
+    movl %ebx, -4(%ebp)
+    movl %esi, %ebx
+    movl %ebx, -8(%ebp)
+    movl %edi, %ebx
+    movl %ebx, -12(%ebp)
+    movl $0, %esi
+    movl 8(%ebp), %ebx
+    movl -4(%ebx), %ebx
+    movl %ebx, %ebx
+    subl $1, %ebx
+    movl %ebx, %ebx
+    movl %ebx, -16(%ebp)
+L3:
+    movl -16(%ebp), %ebx
+    cmp %ebx, %esi
+    jle L4
+L2:
+    movl $0, %eax
+    movl -4(%ebp), %ebx
+    movl %ebx, %ebx
+    movl -8(%ebp), %ebx
+    movl %ebx, %esi
+    movl -12(%ebp), %ebx
+    movl %ebx, %edi
+    movl %eax, %eax
+    jmp L35
+L4:
+    movl 8(%ebp), %ebx
+    movl -8(%ebx), %edi
+    movl %esi, %ebx
+    imull $4, %ebx
+    movl %edi, %edi
+    addl %ebx, %edi
+    movl 8(%ebp), %ebx
+    movl -4(%ebx), %ebx
+    movl %ebx, %ebx
+    subl %esi, %ebx
+    movl %ebx, (%edi)
+    movl 8(%ebp), %ebx
+    pushl %ebx
+    call nop
+    movl %esi, %ebx
+    addl $1, %ebx
+    movl %ebx, %esi
+    jmp L3
+L35:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+nop:
+    pushl %ebp
+    movl %esp, %ebp
+    subl $4, %esp
+    movl %edi, -4(%ebp)
+    movl $L0, %edi
+    pushl %edi
+    call print
+    movl %eax, %edi
+    movl -4(%ebp), %ebx
+    movl %ebx, %edi
+    jmp L36
+L36:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+.section .rodata
+L25:
+.string "\00\00\00\n"
+L24:
+.string "\00\00\00 "
+L0:
+.string "\00\00\00\00"

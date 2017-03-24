@@ -1,0 +1,263 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include "util.h"
+#include "symbol.h"
+#include "absyn.h"
+#include "temp.h"
+#include "errormsg.h"
+#include "tree.h"
+#include "printtree.h"
+#include "frame.h"
+#include "codegen.h"
+#include "table.h"
+
+extern Temp_map F_tempMap;
+static F_frame  Co_frame = NULL; /* current function frame */
+
+static void emit(AS_instr);
+static Temp_temp munchExp(T_exp);
+static void munchStm(T_stm);
+static Temp_tempList munchArgs(int, T_expList);
+
+#define MATCH_OP(I, Op, Sign) \
+	switch (I) { \
+		case T_plus: Op = "addl"; Sign = "+"; break; \
+		case T_minus: Op = "subl"; Sign = "-"; break; \
+		case T_mul: Op = "imull"; Sign = "*"; break; \
+		case T_div: Op = "idivl"; Sign = "/"; break; \
+		default : assert( 0 && "invalid Oper"); \
+	} "for short ';'" 
+
+#define WRITE_ASM_STR(Str, Arg) \
+	sprintf(assem_string, Str, Arg); \
+p2asm_str = String(assem_string)
+
+#define WRITE_ASM_STR2(Str, A1, A2) \
+	sprintf(assem_string, Str, A1, A2); \
+p2asm_str = String(assem_string)
+
+#define WRITE_ASM_STR3(Str, A1, A2, A3) \
+	sprintf(assem_string, Str, A1, A2, A3); \
+p2asm_str = String(assem_string)
+
+static Temp_temp munchExp(T_exp e)
+{
+	char assem_string[100];
+	string p2asm_str;
+	Temp_temp r = Temp_newtemp(); /* return value */
+
+    switch (e->kind) {
+        case T_BINOP: 
+        {
+            char * op = NULL, * sign = NULL;
+            T_exp left = e->u.BINOP.left, right = e->u.BINOP.right;
+            MATCH_OP(e->u.BINOP.op, op, sign);
+			if(e->u.BINOP.op != T_div){
+				if (left->kind == T_CONST) { /* BINOP(op, CONST, e) */
+					WRITE_ASM_STR2("%s $%d, `d0    #57", op, left->u.CONST);	
+		            emit(AS_Oper(p2asm_str, Temp_TempList(r = munchExp(right), NULL), NULL, NULL));
+		        } else if (e->u.BINOP.right->kind == T_CONST) { /* BINOP(op, e, CONST) */
+		            WRITE_ASM_STR2("%s $%d, `d0    #60", op, right->u.CONST);	
+		            emit(AS_Oper(p2asm_str, Temp_TempList(r = munchExp(left), NULL), NULL, NULL));
+		        } else { /* BINOP(op, e, e) */
+		            WRITE_ASM_STR("%s `s0, `d0    #63", op);
+		            emit(AS_Oper(p2asm_str, Temp_TempList(r = munchExp(right), NULL), Temp_TempList(munchExp(left), NULL), NULL));
+		        }
+			}
+			else{
+		        emit(AS_Oper("pushl %eax    #68", NULL, NULL, NULL));
+				if (left->kind == T_CONST) { /* BINOP(op, CONST, e) */
+					emit(AS_Oper("movl `d0, %%eax    #70", Temp_TempList(r = munchExp(right), NULL), NULL, NULL));
+		        	emit(AS_Oper("cltd", NULL, NULL, NULL));
+					WRITE_ASM_STR2("%s $%d    #72", op, left->u.CONST);	
+		            emit(AS_Oper(p2asm_str, NULL, NULL, NULL));
+					emit(AS_Oper("movl %%eax, `d0    #74", Temp_TempList(r = munchExp(right), NULL), NULL, NULL));
+		        } else if (e->u.BINOP.right->kind == T_CONST) { /* BINOP(op, e, CONST) */
+					WRITE_ASM_STR("movl $%d, %%eax    #76", right->u.CONST);
+					emit(AS_Oper(p2asm_str, NULL, NULL, NULL));
+		        	emit(AS_Oper("cltd", NULL, NULL, NULL));
+		            WRITE_ASM_STR("%s `d0    #79", op);	
+		            emit(AS_Oper(p2asm_str, Temp_TempList(r = munchExp(left), NULL), NULL, NULL));
+		        } else { /* BINOP(op, e, e) */
+					emit(AS_Oper("movl `d0, %%eax    #82", Temp_TempList(r = munchExp(right), NULL), NULL, NULL));
+		        	emit(AS_Oper("cltd", NULL, NULL, NULL));
+		            WRITE_ASM_STR("%s `s0    #84", op);
+		            emit(AS_Oper(p2asm_str, NULL, Temp_TempList(munchExp(left), NULL), NULL));
+					emit(AS_Oper("movl %%eax, `d0    #86", Temp_TempList(r = munchExp(right), NULL), NULL, NULL));
+		        }
+		        emit(AS_Oper("popl %eax    #88", NULL, NULL, NULL));
+			}
+            return r;
+			
+		}
+		case T_MEM: 
+        {
+            T_exp mem = e->u.MEM;
+            if (mem->kind == T_BINOP && mem->u.BINOP.op == T_plus) {
+                T_exp left = mem->u.BINOP.left, right = mem->u.BINOP.right;
+                if (left->kind == T_CONST) { /* MEM(BINOP(+, CONST, e)) */
+                    WRITE_ASM_STR("movl %d(`s0), `d0    #99", left->u.CONST);
+                    emit(AS_Move(p2asm_str, Temp_TempList(r, NULL), Temp_TempList(munchExp(right), NULL)));
+                } else if (right->kind == T_CONST) { /**/
+                    WRITE_ASM_STR("movl %d(`s0), `d0    #102", right->u.CONST+8);
+					TagOne++;
+					Temp_temp ttt = munchExp(left);
+					string s = Temp_look(F_tempMap, ttt);
+                    emit(AS_Move(p2asm_str, Temp_TempList(r, NULL), Temp_TempList(ttt, NULL)));
+                } else assert(0 && "invalid MEM-BINOP"); /*??? this shouldnot occur */
+            } else if (mem->kind == T_CONST) { /* MEM(CONST) */
+                WRITE_ASM_STR("movl ($%d), `d0    #106", mem->u.CONST);
+                emit(AS_Move(p2asm_str, Temp_TempList(r, NULL), NULL));
+            } else { /* MEM(e) */
+                emit(AS_Move(String("movl (`s0), `d0    #109"), Temp_TempList(r, NULL), Temp_TempList(munchExp(mem->u.MEM), NULL)));
+            }
+            return r;
+        }
+        case T_TEMP: return e->u.TEMP;
+		case T_ESEQ: munchStm(e->u.ESEQ.stm); return munchExp(e->u.ESEQ.exp);
+		case T_NAME: Temp_enter(F_tempMap, r, Temp_labelstring(e->u.NAME)); return r;
+		case T_CONST: 
+        {
+            WRITE_ASM_STR("movl $%d, `d0    #118", e->u.CONST);
+            emit(AS_Move(p2asm_str, Temp_TempList(r, NULL), NULL));
+            return r;
+        }
+        case T_CALL: 
+        {
+            r = munchExp(e->u.CALL.fun);
+            emit(AS_Oper(String("call `f0    #125"), F_calldefs(), Temp_TempList(r, munchArgs(0, e->u.CALL.args)), NULL));
+			return r; /* return value unsure */
+        }
+		default: assert(0 && "invalid T_exp");
+	}
+}
+
+
+#define ASSEM_MOVE_MEM_PLUS(Dst, Src, Constt) \
+	T_exp e1 = Dst, e2 = Src; \
+    int constt = Constt; \
+    sprintf(assem_string, "movl `s1, %d(`s0)", constt); \
+    p2asm_str = String(assem_string); \
+    emit(AS_Move(p2asm_str, NULL, Temp_TempList(munchExp(e1), Temp_TempList(munchExp(e2), NULL))))
+
+#define MATCH_CMP(I, Op) \
+	switch (I) { \
+		case T_eq: Op = "je"; break; \
+		case T_ne: Op = "jne"; break; \
+		case T_lt: Op = "jl"; break; \
+		case T_gt: Op = "jg"; break; \
+		case T_le: Op = "jle"; break; \
+		case T_ge: Op = "jge"; break; \
+		default: assert(0 && "Invalid CMP SIGN"); \
+	} \
+"for short ';'"
+
+static void munchStm(T_stm s)
+{
+	char assem_string[100];
+	string p2asm_str;
+
+	switch (s->kind) {
+		case T_MOVE:
+        {
+            T_exp dst = s->u.MOVE.dst, src = s->u.MOVE.src;
+            if (dst->kind == T_MEM) {
+                if (dst->u.MEM->kind == T_BINOP && dst->u.MEM->u.BINOP.op == T_plus) {
+                    if (dst->u.MEM->u.BINOP.right->kind == T_CONST) { /* MOVE (MEM(BINOP(+, e, CONST)), e) */
+                        ASSEM_MOVE_MEM_PLUS(dst->u.MEM->u.BINOP.left, src, dst->u.MEM->u.BINOP.right->u.CONST);	
+                    } 
+                    if (dst->u.MEM->u.BINOP.left->kind == T_CONST) { /* MOVE (MEM(BINOP(+, CONST, e)), e) */
+                        ASSEM_MOVE_MEM_PLUS(dst->u.MEM->u.BINOP.right, src, dst->u.MEM->u.BINOP.left->u.CONST);			
+                    }
+                } else if (dst->u.MEM->kind == T_CONST) { /* MOVE(MEM(CONST), e) */
+                    WRITE_ASM_STR("movl `s0, (%d)    #170", dst->u.MEM->u.CONST);
+                    emit(AS_Move(p2asm_str, NULL, Temp_TempList(munchExp(src), NULL)));
+                } else if (src->kind == T_MEM) { /* MOVE(MEM(e), MEM(e)) */
+                    emit(AS_Move("movl `s1, (`s0)    #173", NULL, Temp_TempList(munchExp(dst->u.MEM), Temp_TempList(munchExp(src->u.MEM), NULL))));
+                } else { /* MOVE(MEM(e), e) */
+                    emit(AS_Move(String("movl `s1, (`s0)    #175"), NULL, Temp_TempList(munchExp(dst->u.MEM), Temp_TempList(munchExp(src), NULL))));
+                }	
+            } else if(dst->kind == T_TEMP) { /* MOVE(TEMP(e), e) */
+                emit(AS_Move(String("movl `s0, `d0    #178"), Temp_TempList(munchExp(dst), NULL), Temp_TempList(munchExp(src), NULL)));	
+            } 
+            break;
+        }
+		case T_SEQ: munchStm(s->u.SEQ.left); munchStm(s->u.SEQ.right); break;
+		case T_LABEL: 
+        {
+            WRITE_ASM_STR("%s", Temp_labelstring(s->u.LABEL));
+            emit(AS_Label(p2asm_str, s->u.LABEL)); 
+            break;
+        }
+		case T_JUMP: 
+        {
+            Temp_temp r = munchExp(s->u.JUMP.exp);
+            emit(AS_Oper(String("jmp `j0    #192"), Temp_TempList(r, NULL), NULL, AS_Targets(s->u.JUMP.jumps)));
+            break;
+        }
+		case T_CJUMP: 
+        {
+            char * cmp;
+            Temp_temp left = munchExp(s->u.CJUMP.left), right = munchExp(s->u.CJUMP.right);
+            emit(AS_Oper(String("cmp `s0, `s1    #199"), NULL, Temp_TempList(left, Temp_TempList(right, NULL)), NULL));
+            MATCH_CMP(s->u.CJUMP.op, cmp);	
+            WRITE_ASM_STR("%s `j0    #201", cmp);
+            emit(AS_Oper(p2asm_str, NULL, NULL, AS_Targets(Temp_LabelList(s->u.CJUMP.true, NULL))));
+            break;	
+        }
+		case T_EXP: 
+        {
+            munchExp(s->u.EXP); 
+            //emit(AS_Move(String("movl `s0, `d0"), Temp_TempList(munchExp(s->u.EXP), NULL), Temp_TempList(munchExp(s->u.EXP), NULL)));	
+            break;
+        }
+		default: assert("Invalid T_stm" && 0);
+	}
+}
+
+static string reg_names[] = {"eax", "ebx", "ecx", "edx", "edi", "esi"}; 
+static int    reg_count = 0;
+static Temp_tempList munchArgs(int i, T_expList args/*, F_accessList formals*/) 
+{
+	/* pass params to function
+	 * actually use all push stack, no reg pass paras
+	 */
+
+	/* get args register-list */
+	if (!args) return NULL;
+
+	Temp_tempList Temp_TempListist = munchArgs(i + 1, args->tail);
+	Temp_temp rarg = munchExp(args->head);
+	char assem_string[100];
+	string p2asm_str;
+
+	emit(AS_Oper(String("pushl `s0    #231"), NULL, Temp_TempList(rarg, NULL), NULL));	
+	return (rarg, Temp_TempListist);
+}
+
+static AS_instrList instrList = NULL, last = NULL;
+static void emit (AS_instr instr) {
+	if (!instrList) {
+		 instrList = AS_InstrList(instr, NULL);
+		last = instrList;
+	} else {
+		last->tail = AS_InstrList(instr, NULL);
+		last = last->tail;
+	}
+}
+
+//Lab 6: your code here
+AS_instrList F_codegen(F_frame f, T_stmList stmList) {
+    /* interface */
+    AS_instrList al = NULL;
+    T_stmList sl = stmList;
+    Co_frame = f;
+    for (; sl; sl = sl->tail) {
+        munchStm(sl->head);
+    }
+    al = instrList;
+    instrList = last = NULL;
+    return al;
+}
+
+

@@ -1,0 +1,41 @@
+.text
+.globl tigermain
+.type tigermain, @function
+
+tigermain:
+    pushl %ebp
+    movl %esp, %ebp
+    subl $12, %esp
+    movl %ebx, -12(%ebp)    #swap t103 out with t125
+    movl %esi, %ebx
+    movl %ebx, -4(%ebp)    #swap t104 out with t121
+    movl %edi, %ebx
+    movl %ebx, -8(%ebp)    #swap t105 out with t122
+    movl $8, %ebx
+    pushl %ebx
+    call allocRecord
+    movl %eax, %ebx
+    addl $0, %esp
+    movl %ebx, %edi
+    movl $3, %ebx
+    movl %ebx, 0(%edi)
+    movl $4, %ebx
+    movl %ebx, 4(%edi)
+    movl %edi, %ebx
+    movl 0(%ebx), %edi
+    pushl %edi
+    call printi
+    movl 4(%ebx), %ebx
+    pushl %ebx
+    call printi
+    movl -4(%ebp), %ebx    #swap t104 in with t123
+    movl %ebx, %esi
+    movl -8(%ebp), %ebx    #swap t105 in with t124
+    movl %ebx, %edi
+    jmp L1
+L1:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+.section .rodata

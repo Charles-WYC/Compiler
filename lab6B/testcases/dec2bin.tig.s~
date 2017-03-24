@@ -1,0 +1,155 @@
+.text
+.globl tigermain
+.type tigermain, @function
+
+tigermain:
+    pushl %ebp
+    movl %esp, %ebp
+    subl $4, %esp
+    movl %edi, -4(%ebp)
+    pushl %ebp
+    call try
+    movl %eax, %edi
+    movl -4(%ebp), %ebx
+    movl %ebx, %edi
+    jmp L12
+L12:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+try:
+    pushl %ebp
+    movl %esp, %ebp
+    subl $4, %esp
+    movl %edi, -4(%ebp)
+    movl $100, %edi
+    pushl %edi
+    call printi
+    movl $L2, %edi
+    pushl %edi
+    call print
+    movl $100, %edi
+    pushl %edi
+    movl 8(%ebp), %edi
+    pushl %edi
+    call dec2bin
+    movl $L3, %edi
+    pushl %edi
+    call print
+    movl $200, %edi
+    pushl %edi
+    call printi
+    movl $L4, %edi
+    pushl %edi
+    call print
+    movl $200, %edi
+    pushl %edi
+    movl 8(%ebp), %edi
+    pushl %edi
+    call dec2bin
+    movl $L5, %edi
+    pushl %edi
+    call print
+    movl $789, %edi
+    pushl %edi
+    call printi
+    movl $L6, %edi
+    pushl %edi
+    call print
+    movl $789, %edi
+    pushl %edi
+    movl 8(%ebp), %edi
+    pushl %edi
+    call dec2bin
+    movl $L7, %edi
+    pushl %edi
+    call print
+    movl $567, %edi
+    pushl %edi
+    call printi
+    movl $L8, %edi
+    pushl %edi
+    call print
+    movl $567, %edi
+    pushl %edi
+    movl 8(%ebp), %edi
+    pushl %edi
+    call dec2bin
+    movl $L9, %edi
+    pushl %edi
+    call print
+    movl %eax, %edi
+    movl -4(%ebp), %ebx
+    movl %ebx, %edi
+    jmp L13
+L13:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+dec2bin:
+    pushl %ebp
+    movl %esp, %ebp
+    subl $12, %esp
+    movl %ebx, %eax
+    movl %eax, -4(%ebp)
+    movl %esi, %eax
+    movl %eax, -8(%ebp)
+    movl %edi, %eax
+    movl %eax, -12(%ebp)
+    movl 12(%ebp), %ebx
+    movl $0, %eax
+    cmp %eax, %ebx
+    jg L1
+L10:
+    movl $0, %eax
+    movl -8(%ebp), %ebx
+    movl %ebx, %esi
+    movl -12(%ebp), %ebx
+    movl %ebx, %edi
+    jmp L14
+L1:
+    movl 12(%ebp), %edi
+    movl $2, %ebx
+    movl %edi, %eax
+    cltd
+    idivl %ebx
+    pushl %eax
+    movl 8(%ebp), %ebx
+    pushl %ebx
+    call dec2bin
+    movl 12(%ebp), %ebx
+    movl 12(%ebp), %edi
+    movl $2, %esi
+    movl %edi, %eax
+    cltd
+    idivl %esi
+    movl %eax, %edi
+    imull $2, %edi
+    subl %edi, %ebx
+    pushl %ebx
+    call print
+    jmp L10
+L14:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+.section .rodata
+L9:
+.string "\00\00\00\n"
+L8:
+.string "\00\00\00\t->\t"
+L7:
+.string "\00\00\00\n"
+L6:
+.string "\00\00\00\t->\t"
+L5:
+.string "\00\00\00\n"
+L4:
+.string "\00\00\00\t->\t"
+L3:
+.string "\00\00\00\n"
+L2:
+.string "\00\00\00\t->\t"

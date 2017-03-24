@@ -1,0 +1,65 @@
+.text
+.globl tigermain
+.type tigermain, @function
+
+tigermain:
+    pushl %ebp
+    movl %esp, %ebp
+    subl $4, %esp
+    movl $10, %eax
+    pushl %eax
+    pushl %ebp
+    call nfactor
+    pushl %eax
+    call printi
+    jmp L3
+L3:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+nfactor:
+    pushl %ebp
+    movl %esp, %ebp
+    subl $8, %esp
+    subl $8, %esp
+    movl %ebx, -4(%ebp)
+    movl %edi, %ebx
+    movl %ebx, -8(%ebp)
+    movl 12(%ebp), %edi
+    movl $0, %ebx
+    cmp %ebx, %edi
+    je L1
+L2:
+    movl 12(%ebp), %ebx
+    movl %ebx, %edi
+    movl 12(%ebp), %ebx
+    subl $1, %ebx
+    pushl %ebx
+    movl 8(%ebp), %ebx
+    pushl %ebx
+    call nfactor
+    movl %eax, %ebx
+    movl %edi, %eax
+    imull %ebx, %eax
+L6:
+    movl -8(%ebp), %ebx
+    movl %ebx, %edi
+    jmp L5
+L1:
+    movl $1, %eax
+    jmp L6
+L5:
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
+.section .rodata
+L9:
+.string "\00\00\00\n"
+L8:
+.string "\00\00\00\n"
+L1:
+.string "\00\00\00y"
+L0:
+.string "\00\00\00x"
